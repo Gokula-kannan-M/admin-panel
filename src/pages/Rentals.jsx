@@ -1,87 +1,73 @@
-import { useEffect, useState } from "react";
+import { useApp } from "../context/AppContext";
 
 export default function Rentals() {
-  const [loading, setLoading] = useState(true);
-  const [rentals, setRentals] = useState([]);
+  const { rentals, setRentals } = useApp();
 
-  useEffect(() => {
-    // Fake API delay
-    setTimeout(() => {
-      setRentals([
-        {
-          id: "R001",
-          product: "Sony A7 III",
-          customer: "Arun Kumar",
-          returnDate: "2026-04-02",
-          status: "Active",
-        },
-        {
-          id: "R002",
-          product: "Canon EOS R6",
-          customer: "Vignesh",
-          returnDate: "2026-03-28",
-          status: "Due Soon",
-        },
-        {
-          id: "R003",
-          product: "Nikon D850",
-          customer: "Rahul",
-          returnDate: "2026-03-20",
-          status: "Overdue",
-        },
-      ]);
-      setLoading(false);
-    }, 1200);
-  }, []);
+  const handleReturn = (index) => {
+    const updated = [...rentals];
+    updated[index].status = "Returned";
+    setRentals(updated);
+  };
 
-  if (loading) {
-    return <p className="text-gray-500">Loading rentals...</p>;
-  }
+  const handleNotReturn = (index) => {
+    const updated = [...rentals];
+    updated[index].status = "Not Returned";
+    setRentals(updated);
+  };
 
   return (
     <div>
-      <h1 className="text-xl font-semibold mb-4">Studio Rentals</h1>
+      <h1 className="text-2xl font-semibold mb-4 text-gray-800">
+        Rentals
+      </h1>
 
-      {/* Rentals Table */}
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="p-3 text-left">Rental ID</th>
-              <th className="p-3 text-left">Product</th>
-              <th className="p-3 text-left">Customer</th>
-              <th className="p-3 text-left">Return Date</th>
-              <th className="p-3 text-left">Status</th>
-            </tr>
-          </thead>
+      {rentals.length === 0 ? (
+        <p className="text-gray-500">No rentals</p>
+      ) : (
+        rentals.map((r, i) => (
+          <div
+            key={i}
+            className="bg-white p-4 mb-3 rounded-2xl shadow-md border border-gray-100 flex justify-between items-center"
+          >
+            <div>
+              <p className="font-semibold text-gray-800">
+                {r.product} - {r.customer}
+              </p>
+              <p className="text-sm mt-1">
+                Status:{" "}
+                <span
+                  className={`font-medium ${
+                    r.status === "Returned"
+                      ? "text-green-600"
+                      : "text-red-500"
+                  }`}
+                >
+                  {r.status}
+                </span>
+              </p>
+            </div>
 
-          <tbody>
-            {rentals.map((item, i) => (
-              <tr key={i} className="border-t hover:bg-gray-50 transition">
-                <td className="p-3">{item.id}</td>
-                <td className="p-3">{item.product}</td>
-                <td className="p-3">{item.customer}</td>
-                <td className="p-3">{item.returnDate}</td>
+            {/* Buttons */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleReturn(i)}
+                className="px-4 py-1.5 rounded-lg text-sm font-medium 
+                bg-green-100 text-green-700 hover:bg-green-200 transition"
+              >
+                Returned
+              </button>
 
-                {/* Status Badge */}
-                <td className="p-3">
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm ${
-                      item.status === "Active"
-                        ? "bg-green-100 text-green-600"
-                        : item.status === "Due Soon"
-                        ? "bg-yellow-100 text-yellow-600"
-                        : "bg-red-100 text-red-600"
-                    }`}
-                  >
-                    {item.status}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+              <button
+                onClick={() => handleNotReturn(i)}
+                className="px-4 py-1.5 rounded-lg text-sm font-medium 
+                bg-red-100 text-red-600 hover:bg-red-200 transition"
+              >
+                Not Returned
+              </button>
+            </div>
+          </div>
+        ))
+      )}
     </div>
   );
 }

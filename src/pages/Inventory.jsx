@@ -1,63 +1,93 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useApp } from "../context/AppContext";
+
 export default function Inventory() {
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState([]);
-  const [product, setProduct] = useState("");
+  const { inventory, setInventory } = useApp();
 
-  useEffect(() => {
-    setTimeout(() => {
-      setData([
-        { name: "Canon EOS R5", stock: 10 },
-        { name: "Sony A7 III", stock: 15 },
-      ]);
-      setLoading(false);
-      toast.success("Data Loaded");
-    }, 1500);
-  }, []);
+  const [showForm, setShowForm] = useState(false);
+  const [editingIndex, setEditingIndex] = useState(null);
 
-  const handleAdd = () => {
-    if (!product) return;
-    setData([...data, { name: product, stock: 5 }]);
-    setProduct("");
-    toast.success("Product Added");
+  const [form, setForm] = useState({
+    name: "",
+    stock: "",
+    status: "Pending",
+  });
+
+  const handleSave = () => {
+    if (!form.name || !form.stock) return;
+
+    if (editingIndex !== null) {
+      const updated = [...inventory];
+      updated[editingIndex] = form;
+      setInventory(updated);
+      setEditingIndex(null);
+    } else {
+      setInventory([...inventory, form]);
+    }
+
+    setForm({ name: "", stock: "", status: "Pending" });
+    setShowForm(false);
   };
 
-  if (loading) return <p>Loading inventory...</p>;
+  const handleEdit = (index) => {
+    setForm(inventory[index]);
+    setEditingIndex(index);
+    setShowForm(true);
+  };
+
+  const handleDelete = (index) => {
+    const confirmDelete = window.confirm("Are you sure to delete?");
+    if (!confirmDelete) return;
+
+    setInventory(inventory.filter((_, i) => i !== index));
+  };
 
   return (
     <div>
-      <h1 className="text-xl font-semibold mb-4">Inventory</h1>
+      <h1 className="text-xl mb-4">Inventory</h1>
 
-      {/* Add Form */}
-      <div className="flex gap-2 mb-4">
-        <input
-          value={product}
-          onChange={(e) => setProduct(e.target.value)}
-          placeholder="Add product"
-          className="border p-2 rounded"
-        />
-        <button onClick={handleAdd} className="bg-black text-white px-4 rounded">
-          Add
-        </button>
-      </div>
+      <button
+        onClick={() => setShowForm(true)}
+        className="bg-black text-white px-4 py-2 rounded mb-4"
+      >
+        Add Product
+      </button>
 
-      {/* Table */}
-      <table className="w-full bg-white rounded-xl">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="p-3">Product</th>
-            <th className="p-3">Stock</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((item, i) => (
-            <tr key={i} className="border-t">
-              <td className="p-3">{item.name}</td>
-              <td className="p-3">{item.stock}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {showForm && (
+        <div className="bg-white p-4 rounded shadow mb-4">
+          <input
+            placeholder="Product"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className="border p-2 mr-2"
+          />
+          <input
+            placeholder="Stock"
+            value={form.stock}
+            onChange={(e) => setForm({ ...form, stock: e.target.value })}
+            className="border p-2 mr-2"
+          />
+
+          <button onClick={handleSave} className="bg-green-500 text-white px-3">
+            Save
+          </button>
+        </div>
+      )}
+
+      {inventory.map((item, i) => (
+        <div key={i} className="bg-white p-3 mb-2 rounded shadow">
+          <p>
+            {item.name} - Stock: {item.stock}
+          </p>
+
+          <button onClick={() => handleEdit(i)} className="text-white px-5 py-1 bg-blue-500 mr-2 rounded">
+            Edit
+          </button>
+          <button onClick={() => handleDelete(i)} className="text-white px-5 py-1 rounded bg-red-500">
+            Delete
+          </button>
+        </div>
+      ))}
     </div>
   );
 }

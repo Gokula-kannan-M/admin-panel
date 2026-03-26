@@ -2,44 +2,59 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip } from "recharts";
 import Header from "../components/Header";
 import { StatsCard } from "../components/StatsCard";
 import ModuleCard from "../components/ModuleCard";
-
-const chartData = [
-  { name: "Jan", sales: 4000 },
-  { name: "Feb", sales: 3000 },
-  { name: "Mar", sales: 5000 },
-];
+import { useApp } from "../context/AppContext";
 
 export default function Dashboard() {
+  const { inventory, rentals, deliveries } = useApp();
+
+  // 🔥 Dynamic Stats
+  const totalStock = inventory.reduce(
+    (sum, i) => sum + Number(i.stock || 0),
+    0,
+  );
+  const activeRentals = rentals.filter((r) => r.status !== "Returned").length;
+  const pendingDeliveries = deliveries.filter(
+    (d) => d.status === "Pending",
+  ).length;
+
+  // 🔥 Dynamic Chart (based on rentals count)
+  const chartData = [
+    { name: "Rentals", value: rentals.length },
+    {
+      name: "Returned",
+      value: rentals.filter((r) => r.status === "Returned").length,
+    },
+    { name: "Pending", value: activeRentals },
+  ];
+
   return (
     <div>
       <Header />
 
-      {/* Stats Section */}
+      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatsCard title="Total Revenue" value="₹2,50,000" />
-        <StatsCard title="Available Cameras" value="85 Units" />
-        <StatsCard title="Active Rentals" value="18" />
-        <StatsCard title="Pending Deliveries" value="6" />
+        <StatsCard title="Total Stock" value={totalStock} />
+        <StatsCard title="Active Rentals" value={activeRentals} />
+        <StatsCard title="Pending Deliveries" value={pendingDeliveries} />
+        <StatsCard title="Total Rentals" value={rentals.length} />
       </div>
 
-      {/* Chart Section 👇 */}
+      {/* Chart */}
       <div className="bg-white p-5 rounded-2xl mt-8 shadow-sm">
-        <h2 className="text-lg font-semibold mb-4">Sales Overview</h2>
+        <h2 className="text-lg font-semibold mb-4">System Overview</h2>
 
-        <div className="overflow-x-auto">
-          <BarChart width={600} height={250} data={chartData}>
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="sales" />
-          </BarChart>
-        </div>
+        <BarChart width={500} height={250} data={chartData}>
+          <XAxis dataKey="name" />
+          <YAxis />
+          <Tooltip />
+          <Bar dataKey="value" />
+        </BarChart>
       </div>
 
-      {/* Business Modules */}
+      {/* Modules */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
         <ModuleCard
-          title="Camera Rentals"
+          title="Rentals"
           desc="Manage bookings"
           button="View"
           path="/rentals"
